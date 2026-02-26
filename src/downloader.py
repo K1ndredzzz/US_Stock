@@ -63,19 +63,21 @@ async def _get_filing_url(
     accessions = filings.get("accessionNumber", [])
     primary_docs = filings.get("primaryDocument", [])
 
-    # 10-K for fiscal year YYYY is filed between Jan-Aug of YYYY+1
-    # Most companies file by Apr 30, but non-calendar fiscal years (e.g., MSFT Jun 30) file later
-    # 20-F has extended deadline to Jun 30 of YYYY+1
-    start = f"{year + 1}-01-01"
-    end = f"{year + 1}-08-31" if ticker not in config.FOREIGN_FILERS else f"{year + 1}-06-30"
+    # The most reliable way to find the 10-K/20-F for a specific fiscal year
+    # is to match the reportDate (which is the fiscal year end date) against the target year.
+    # Different companies have different fiscal year ends (Dec 31, Jun 30, Sep 30, etc.)
+    # and file at different times relative to that end date.
+    target_year_str = str(year)
 
     # Helper to search in a filings dict
-    def _search_in_filings(forms_list, dates_list, accessions_list, docs_list):
-        for form, date, accession, doc in zip(forms_list, dates_list, accessions_list, docs_list):
+    def _search_in_filings(forms_list, report_dates_list, accessions_list, docs_list):
+        for form, rdate, accession, doc in zip(forms_list, report_dates_list, accessions_list, docs_list):
             if form not in (form_type, f"{form_type}/A"):
                 continue
-            if not (start <= date <= end):
+            # The report date defines the fiscal year period focus
+            if not str(rdate).startswith(target_year_str):
                 continue
+
             acc_clean = accession.replace("-", "")
             try:
                 cik_int = int(cik)
@@ -86,7 +88,8 @@ async def _get_filing_url(
         return None
 
     # Search in recent
-    result = _search_in_filings(forms, dates, accessions, primary_docs)
+    report_dates = filings.get("reportDate", [])
+    result = _search_in_filings(forms, report_dates, accessions, primary_docs)
     if result:
         return result
 
@@ -113,7 +116,7 @@ async def _get_filing_url(
         file_data = file_resp.json()
         result = _search_in_filings(
             file_data.get("form", []),
-            file_data.get("filingDate", []),
+            file_data.get("reportDate", []),
             file_data.get("accessionNumber", []),
             file_data.get("primaryDocument", []),
         )
