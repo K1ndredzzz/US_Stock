@@ -63,10 +63,11 @@ async def _get_filing_url(
     accessions = filings.get("accessionNumber", [])
     primary_docs = filings.get("primaryDocument", [])
 
-    # 10-K for fiscal year YYYY is filed between Jan-Apr of YYYY+1
+    # 10-K for fiscal year YYYY is filed between Jan-Aug of YYYY+1
+    # Most companies file by Apr 30, but non-calendar fiscal years (e.g., MSFT Jun 30) file later
     # 20-F has extended deadline to Jun 30 of YYYY+1
     start = f"{year + 1}-01-01"
-    end = f"{year + 1}-06-30" if ticker in config.FOREIGN_FILERS else f"{year + 1}-04-30"
+    end = f"{year + 1}-08-31" if ticker not in config.FOREIGN_FILERS else f"{year + 1}-06-30"
 
     # Helper to search in a filings dict
     def _search_in_filings(forms_list, dates_list, accessions_list, docs_list):
