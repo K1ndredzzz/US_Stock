@@ -40,6 +40,13 @@ async def _load_cik_map(client: httpx.AsyncClient) -> dict[str, str]:
             ticker = entry["ticker"].upper()
             cik = str(entry["cik_str"]).zfill(10)
             _cik_cache[ticker] = cik
+
+        # Hardcode missing/renamed/acquired CIKs
+        _cik_cache["SQ"] = "0001512673"    # Block Inc
+        _cik_cache["CYBR"] = "0001594805"  # CyberArk
+        _cik_cache["LTHM"] = "0001740967"  # Livent Corp (now Arcadium)
+        _cik_cache["PARA"] = "0000813828"  # Paramount Global (was VIAC)
+
     return _cik_cache
 
 
@@ -53,6 +60,7 @@ async def _get_filing_url(
     form_type = "20-F" if ticker in config.FOREIGN_FILERS else "10-K"
     url = f"{config.SEC_BASE_URL}/submissions/CIK{cik}.json"
     async with semaphore:
+        await asyncio.sleep(0.15)
         resp = await client.get(url, headers=_HEADERS)
     resp.raise_for_status()
     submissions = resp.json()
@@ -72,7 +80,7 @@ async def _get_filing_url(
     # Helper to search in a filings dict
     def _search_in_filings(forms_list, report_dates_list, accessions_list, docs_list):
         for form, rdate, accession, doc in zip(forms_list, report_dates_list, accessions_list, docs_list):
-            if form not in (form_type, f"{form_type}/A"):
+            if form not in (form_type, f"{form_type}/A", "10-K", "10-K/A", "20-F", "20-F/A"):
                 continue
             # The report date defines the fiscal year period focus
             if not str(rdate).startswith(target_year_str):
@@ -100,15 +108,13 @@ async def _get_filing_url(
         if not file_name:
             continue
 
-        # Check if this file's date range overlaps with our target window
-        file_from = file_info.get("filingFrom", "")
-        file_to = file_info.get("filingTo", "")
-        if file_to < start or file_from > end:
-            continue  # No overlap
-
-        # Fetch the paginated file
+        # Fetch the paginated file directly without strict date overlap check
+        # (since we now rely on reportDate exact matching inside _search_in_filings)
+        # We can just fetch it sequentially until we find a match or exhaust them
         file_url = f"{config.SEC_BASE_URL}/submissions/{file_name}"
         async with semaphore:
+            # Add a small sleep between paginated requests to respect rate limits
+            await asyncio.sleep(0.15)
             file_resp = await client.get(file_url, headers=_HEADERS)
         if file_resp.status_code != 200:
             continue
@@ -156,6 +162,7 @@ async def download_filing(
         return None
 
     async with semaphore:
+        await asyncio.sleep(0.15)
         resp = await client.get(filing_url, headers=_HEADERS, follow_redirects=True)
     if resp.status_code != 200:
         logger.warning(f"[{ticker}/{year}] HTTP {resp.status_code} for {filing_url}")

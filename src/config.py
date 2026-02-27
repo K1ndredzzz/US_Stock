@@ -25,9 +25,9 @@ HTTPS_PROXY = os.getenv("HTTPS_PROXY", "http://127.0.0.1:7890")
 
 SEC_BASE_URL = "https://data.sec.gov"
 SEC_CIK_URL = "https://www.sec.gov/files/company_tickers.json"
-SEC_RATE_LIMIT = 8
+SEC_RATE_LIMIT = 5
 VERTEX_WORKERS = 6
-SEC_WORKERS = 8
+SEC_WORKERS = 5
 
 # ── Load from stocks.toml ──────────────────────────────────
 _TOML_PATH = BASE_DIR / "stocks.toml"

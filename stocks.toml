@@ -16,7 +16,7 @@ years = [
 ]
 
 # 提交 20-F 年报的外国上市公司（截止日期延长到次年 6 月 30 日）
-foreign_filers = ["TSM", "ASML", "NVO", "SHOP", "BABA", "PDD", "SONY"]
+foreign_filers = ["TSM", "ASML", "NVO", "SHOP", "BABA", "PDD", "SONY", "CHKP", "NTES", "ARM", "SPOT"]
 
 # IPO 年份下限：早于此财年的数据跳过，避免无效的 API 请求
 [ipo_year_floor]
@@ -72,7 +72,7 @@ tickers = [
   "ZS", "PANW", "HUBS",                     # 网络安全/营销SaaS
   "WDAY", "VEEV",                            # 企业SaaS
   "TEAM", "MNDY", "ZM", "DOCU",             # 协作工具/文档管理
-  "INTU", "PAYC", "SPLK"                     # 新增：财税/人力SaaS/数据监控
+  "INTU", "PAYC"                             # 新增：财税/人力SaaS
 ]
 
 # ── Tier 4: Consumer & Retail ─────────────────────────────
@@ -92,7 +92,7 @@ tickers = [
   "BLK", "MS", "C",                          # 贝莱德/摩根士丹利/花旗
   "PYPL", "SQ",                              # 金融科技
   "WFC", "USB", "PNC", "SCHW",              # 富国/美国银行/PNC/嘉信理财
-  "BRK.B", "SPGI", "CME", "PGR"              # 新增：伯克希尔/标普/芝商所/前进保险
+  "BRK-B", "SPGI", "CME", "PGR"              # 新增：伯克希尔/标普/芝商所/前进保险
 ]
 
 # ── Tier 6: Healthcare & Biotech ──────────────────────────
@@ -114,7 +114,7 @@ tickers = [
   "UPS", "FDX",                              # 物流
   "DE", "MMM", "HON", "EMR",                # 迪尔/3M/霍尼韦尔/艾默生
   "SLB", "COP",                              # 斯伦贝谢/康菲石油
-  "GD", "NOC", "EOG", "PXD"                  # 新增：通用动力/诺斯洛普/EOG/先锋自然资源
+  "GD", "NOC", "EOG"                         # 新增：通用动力/诺斯洛普/EOG
 ]
 
 # ── Tier 8: BioTech (新增) ────────────────────────────────
