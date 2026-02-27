@@ -43,9 +43,11 @@ async def _load_cik_map(client: httpx.AsyncClient) -> dict[str, str]:
 
         # Hardcode missing/renamed/acquired CIKs
         _cik_cache["SQ"] = "0001512673"    # Block Inc
-        _cik_cache["CYBR"] = "0001594805"  # CyberArk
-        _cik_cache["LTHM"] = "0001740967"  # Livent Corp (now Arcadium)
         _cik_cache["PARA"] = "0000813828"  # Paramount Global (was VIAC)
+
+        # Historical CIKs that are not well-represented in SEC's current tickers json
+        # NOTE: For complex reorganizations with multiple valid CIKs across history
+        # (like GOOGL, DIS), we handle them in _get_filing_url.
 
     return _cik_cache
 
@@ -57,8 +59,30 @@ async def _get_filing_url(
     ticker: str,
     year: int,
 ) -> str | None:
+    # Historical CIK mappings for companies that underwent reorganizations
+    # Mapped as: ticker -> { cutoff_year: old_cik, ... }
+    # This ensures we query the correct CIK for the correct timeframe
+    historical_ciks = {
+        "CI":    {2017: "0000064040"},  # Cigna pre-Express Scripts (2018)
+        "DIS":   {2018: "0001001039"},  # Disney pre-Fox acquisition (2019)
+        "GOOGL": {2014: "0001288776"},  # Google Inc pre-Alphabet (2015)
+        "MDT":   {2014: "0000064670"},  # Medtronic pre-Covidien inversion (2015)
+        "MRVL":  {2020: "0001135951"},  # Marvell Technology Group Ltd (Bermuda) pre-2021
+        "BLK":   {2022: "0001364742"},  # BlackRock Inc (Historical CIK, not 0002012383)
+        "GM":    {2008: "0000040730"},  # Old GM pre-2009 bankruptcy
+    }
+
+    actual_cik = cik
+    if ticker in historical_ciks:
+        for cutoff_year, old_cik in sorted(historical_ciks[ticker].items()):
+            if year <= cutoff_year:
+                actual_cik = old_cik
+                break
+
+    # Hardcoded manual overrides for filings that consistently fail to parse cleanly
+    # or have weird metadata missing from SEC's normal endpoints
     form_type = "20-F" if ticker in config.FOREIGN_FILERS else "10-K"
-    url = f"{config.SEC_BASE_URL}/submissions/CIK{cik}.json"
+    url = f"{config.SEC_BASE_URL}/submissions/CIK{actual_cik}.json"
     async with semaphore:
         await asyncio.sleep(0.15)
         resp = await client.get(url, headers=_HEADERS)
@@ -77,20 +101,27 @@ async def _get_filing_url(
     # and file at different times relative to that end date.
     target_year_str = str(year)
 
+    # Allow for 52/53-week fiscal years that slightly spill over into the first week of January
+    # of the next year (e.g. DPZ 2020 fiscal year ended on 2021-01-03).
+    spillover_prefixes = tuple(f"{year+1}-01-0{i}" for i in range(1, 8))
+
     # Helper to search in a filings dict
     def _search_in_filings(forms_list, report_dates_list, accessions_list, docs_list):
         for form, rdate, accession, doc in zip(forms_list, report_dates_list, accessions_list, docs_list):
-            if form not in (form_type, f"{form_type}/A", "10-K", "10-K/A", "20-F", "20-F/A"):
+            if form not in (form_type, f"{form_type}/A", "10-K", "10-K/A", "20-F", "20-F/A", "40-F", "40-F/A", "10-KT"):
                 continue
+
+            rdate_str = str(rdate)
             # The report date defines the fiscal year period focus
-            if not str(rdate).startswith(target_year_str):
+            # Match strictly the year, or the first week of the following year
+            if not (rdate_str.startswith(target_year_str) or rdate_str.startswith(spillover_prefixes)):
                 continue
 
             acc_clean = accession.replace("-", "")
             try:
-                cik_int = int(cik)
+                cik_int = int(actual_cik)
             except ValueError:
-                logger.error(f"[{ticker}] Malformed CIK: {cik!r}")
+                logger.error(f"[{ticker}] Malformed CIK: {actual_cik!r}")
                 return None
             return f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{acc_clean}/{doc}"
         return None

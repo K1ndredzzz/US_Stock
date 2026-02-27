@@ -185,9 +185,9 @@ class GeminiClient:
                     wait = (2 ** attempt) + random.uniform(0, 1)
                     logger.warning(f"[{ticker}/{year}] Rate limit, retry in {wait:.1f}s")
                     await asyncio.sleep(wait)
-                elif "unavailable" in err_str or "503" in err_str:
-                    wait = 5 * (attempt + 1)
-                    logger.warning(f"[{ticker}/{year}] Service unavailable, retry in {wait}s")
+                elif "unavailable" in err_str or "503" in err_str or "ssleof" in err_str or "max retries exceeded" in err_str:
+                    wait = 5 * (attempt + 1) + random.uniform(1, 3)
+                    logger.warning(f"[{ticker}/{year}] Network/SSL/Proxy error, retry in {wait:.1f}s")
                     await asyncio.sleep(wait)
                 elif isinstance(e, (json.JSONDecodeError, ValueError)):
                     logger.warning(f"[{ticker}/{year}] Parse error attempt {attempt+1}: {e}")

@@ -15,12 +15,16 @@ years = [
   2016, 2015, 2014, 2013, 2012, 2011, 2010, 2009, 2008
 ]
 
-# 提交 20-F 年报的外国上市公司（截止日期延长到次年 6 月 30 日）
+# 提交 20-F 或 40-F 年报的外国上市公司（截止日期延长到次年 6 月 30 日）
 foreign_filers = ["TSM", "ASML", "NVO", "SHOP", "BABA", "PDD", "SONY", "CHKP", "NTES", "ARM", "SPOT"]
 
 # IPO 年份下限：早于此财年的数据跳过，避免无效的 API 请求
 [ipo_year_floor]
-ARM   = 2023
+SHOP  = 2015
+OKTA  = 2018
+VEEV  = 2014
+WDAY  = 2013
+ARM   = 2024
 SNOW  = 2020
 CRWD  = 2019
 PLTR  = 2020
@@ -32,25 +36,40 @@ UBER  = 2019
 LYFT  = 2019
 ABNB  = 2020
 SPOT  = 2018
-TEAM  = 2015
+TEAM  = 2016
 MNDY  = 2021
 ZM    = 2019
 DOCU  = 2018
 RIVN  = 2021
 LCID  = 2021
-S     = 2021
+S     = 2022
 CFLT  = 2021
 PDD   = 2018
-BABA  = 2014
+BABA  = 2015
 META  = 2012
 TSLA  = 2010
+ABBV  = 2012
+PYPL  = 2015
+ZTS   = 2012
+MP    = 2020
+ENPH  = 2012
+FTNT  = 2009
+HUBS  = 2014
+NOW   = 2012
+NXPI  = 2010
+PAYC  = 2014
+ROKU  = 2017
+SEDG  = 2015
+SQ    = 2015
+TENB  = 2018
+TTD   = 2016
 
 # ── Tier 1: AI & Semiconductors ───────────────────────────
 [companies.Tier1_AI_Semis]
 tickers = [
   "NVDA", "AMD", "INTC", "QCOM", "ARM",
   "TSM", "ASML", "AMAT", "LRCX", "KLAC",   # 半导体设备
-  "AVGO", "TXN", "MU",                       # 博通/德州仪器/镁光
+  "TXN", "MU",                             # 德州仪器/镁光
   "MRVL", "MCHP", "ADI", "NXPI",            # Marvell/Microchip/ADI/恩智浦
   "SNPS", "CDNS", "WDC", "STX"              # 新增：EDA双雄/存储双雄
 ]
@@ -108,7 +127,7 @@ tickers = [
 # ── Tier 7: Industrial & Energy ───────────────────────────
 [companies.Tier7_Industrial]
 tickers = [
-  "XOM", "CVX", "GE", "BA", "CAT",
+  "XOM", "CVX", "BA", "CAT",
   "LMT", "RTX",                              # 洛克希德/雷神（国防）
   "NEE", "DUK",                              # 新能源电力
   "UPS", "FDX",                              # 物流
@@ -128,7 +147,7 @@ tickers = [
 [companies.Tier9_CleanEnergy]
 tickers = [
   "FSLR", "ENPH", "SEDG",                    # 太阳能/逆变器
-  "ALB", "LTHM", "MP",                       # 锂矿/稀土
+  "ALB", "MP",                               # 锂矿/稀土
   "RIVN", "LCID", "ON", "WOLF"               # 新能源车/碳化硅
 ]
 
@@ -144,7 +163,7 @@ tickers = [
 [companies.Tier11_CyberSecurity]
 tickers = [
   "FTNT", "CHKP", "OKTA", "CFLT",
-  "CYBR", "S", "TENB"                        # 纯正网络安全标的
+  "S", "TENB"                        # 纯正网络安全标的
 ]
 
 # ── Tier 12: Communications (新增) ────────────────────────
